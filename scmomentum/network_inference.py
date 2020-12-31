@@ -1,8 +1,7 @@
-from collections import defaultdict
 import numpy as np
 import pandas as pd
 import scvelo as scv
-
+from collections import defaultdict
 from scmomentum.distances import expression_distance,network_distance
 
 def preprocess(adata, clustcol):
