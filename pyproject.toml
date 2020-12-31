@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "scmomentum"
+version = "0.1.0"
+description = "Network inference"
+authors = ["Larisa M. Soto"]
+
+[tool.poetry.dependencies]
+python = "^3.7"
+numpy = "^1.19.4"
+scvelo = "^0.2.2"
+scikit-bio = "^0.5.6"
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
