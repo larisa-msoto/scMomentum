@@ -1,8 +1,0 @@
-numpy
-pandas
-scvelo
-pickle
-random
-copy
-scikit-learn
-scikit-bio
