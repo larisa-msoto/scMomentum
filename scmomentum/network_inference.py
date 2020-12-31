@@ -83,7 +83,7 @@ def predict_network(adata, cluster, genes, network_size, clustcol, copy=False):
 	else:
 		geneset = [g for g in genes if g in X.columns]
 		genes = "manual"
-	tag = "W-" + genes + "-" + str(network_size)
+	tag = genes + "-" + str(network_size)
 
 	# Infer networks
 
