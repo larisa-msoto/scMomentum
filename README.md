@@ -6,4 +6,26 @@ A method to infer Gene Regulatory Networks (GRNs) and reconstruct developmental 
 
 **Pre-print**
 
-https://biorxiv.org/cgi/content/short/2020.12.30.424887v1 
+[scMomentum: Inference of Cell-Type-Specific Regulatory Networks and Energy Landscapes](https://biorxiv.org/cgi/content/short/2020.12.30.424887v1) 
+
+### Installation
+
+You can install it directly from the repository using `pip`
+
+```
+pip install git+https://github.com/larisa-msoto/scMomentum.git
+```
+
+As an alternative you can clone the repository and then install it with `pip`
+
+```
+git clone pip install git+https://github.com/larisa-msoto/scMomentum.git
+cd scMomentum
+pip install scmomentum
+```
+
+### Usage
+
+An example tutorial with the basics can be found in `notebooks`. 
+
+
