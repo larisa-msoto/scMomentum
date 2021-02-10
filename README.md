@@ -1,6 +1,6 @@
 # scMomentum
 
-A method to infer Gene Regulatory Networks (GRNs) and reconstruct developmental energy landscapes directly from single-cell RNA-seq data
+A method to infer Gene Regulatory Networks (GRNs) and reconstruct developmental energy landscapes directly from single-cell RNA-seq data.
 
 ![Pipeline](/images/pipeline.png)
 
@@ -19,7 +19,7 @@ pip install git+https://github.com/larisa-msoto/scMomentum.git
 As an alternative you can clone the repository and then install it with `pip`
 
 ```
-git clone pip install git+https://github.com/larisa-msoto/scMomentum.git
+git clone https://github.com/larisa-msoto/scMomentum.git
 cd scMomentum
 pip install scmomentum
 ```

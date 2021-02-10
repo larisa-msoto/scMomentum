@@ -34,7 +34,7 @@ def rank_genes(V, X, g, n):
 	# V = velocity matric for the cells in a specific cluster
 	# X = expression matrix for the cells in a specific cluster
 	# n = number of genes to choose
-	# m = str ranking method. Options:
+	# g = str ranking method. Options:
 	#   * absvel = gene ranking based on the mean (across cells) absolute value of velocity
 	#   * topvel = gene ranking based on the mean (across cells) value of velocity (including sign)
 	#   * stdvel = gene ranking based on decreasing standard deviation of velocity across cells
@@ -43,7 +43,12 @@ def rank_genes(V, X, g, n):
 	#   * highexp = gene ranking basedon decreasing expression level across cells
 	# OUTPUT
 	# genes = list with genes selected (based on the cluster matrix dimensions)
+	
+	options = ['absvel','topvel','stdvel','stdexp','highexp']
 
+	if g not in options:
+		raise ValueError("Gene mode is not in options. Please indicate a valid gene mode")
+	
 	if g == "absvel":
 		gset = V.dropna().abs().mean(0).sort_values(ascending=False)[0:n].index.tolist()
 	elif g == "topvel":
@@ -58,7 +63,7 @@ def rank_genes(V, X, g, n):
 	return gset
 
 
-def predict_network(adata, cluster, genes, network_size, clustcol, copy=False):
+def predict_network(adata, cluster, genes, network_size, clustcol,name='',copy=False):
 
 	## INPUT
 
@@ -83,7 +88,8 @@ def predict_network(adata, cluster, genes, network_size, clustcol, copy=False):
 	else:
 		geneset = [g for g in genes if g in X.columns]
 		genes = "manual"
-	tag = genes + "-" + str(network_size)
+		
+	tag = genes + "-" + str(network_size) + name
 
 	# Infer networks
 
@@ -99,10 +105,14 @@ def predict_network(adata, cluster, genes, network_size, clustcol, copy=False):
 	W = pd.DataFrame(np.array(W, dtype=np.float64), index=geneset, columns=geneset)
 
 	if copy == False:
+
 		if tag in adata.uns.keys():
 			adata.uns[tag][cluster] = W
+			print('--> Updated adata.uns with key ','\''+tag+':'+cluster+'\'')
 		else:
 			adata.uns[tag] = defaultdict(pd.DataFrame)
 			adata.uns[tag][cluster] = W
+			print('--> Updated adata.uns with key ','\''+tag+':'+cluster+'\'')
+
 	else:
 		return W

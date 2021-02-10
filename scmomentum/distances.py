@@ -1,4 +1,4 @@
-import copy
+import copy as cp
 import numpy as np
 import pandas as pd
 import random
@@ -6,6 +6,7 @@ import scvelo as scv
 import skbio as sk
 from sklearn import preprocessing
 from scmomentum.utilities import unique
+import networkx as nx
 
 def rescale(df):
 
@@ -45,9 +46,9 @@ def equal_dimentions(cluster_networks):
 		+ cluster_networks[1].columns.values.tolist()
 	)
 
-	for mat in mats:
+	for mat in cluster_networks:
 
-		l = [not g in cluster_networks.columns.values.tolist() for g in allgenes]
+		l = [g not in mat.columns.values.tolist() for g in allgenes]
 		missing = allgenes[l].tolist()
 
 		if len(missing) == 0:
@@ -100,34 +101,34 @@ def expression_distance(adata, clustcol, resc=True, copy=False):
 	if resc:
 		dist = rescale(dist)
 
-	dist = sk.DistanceMatrix(dist.values)
+	dist = sk.DistanceMatrix(dist.values).to_data_frame()
+	dist.columns,dist.index = clusters,clusters
 
-	if copy == False:
-		adata.uns["expression_distances"] = dist
-	else:
+	if copy:
 		return dist
-
-
-def network_distance(networks, resc=True,dis_type='euclidean'):
+	else:
+		adata.uns["expression_distances"] = dist
+		print('--> Updated adata.uns with key ','\'expression_distances\'')
+		
+def network_distance(adata,net_type,resc=True,dis_type='euclidean',copy=False):
 
 	# Inputs:
 	#  - cluter_mats = list with two network adjacency matrices (each a data frame with gene names as index and columns)
 	#  - resc = bool, wether to rescale the distances using min to max scaling, default False
 	#  - dis_type = type of distance metric to compute. Options:
 	#    * 'euclidean' - default, euclidean norm of adjacency matrices (after matching dimensions)
-	#    * 'ji_all_genes' - jaccard index of original adjacency matrices
-	#    * 'ji_top_edges' - jaccard index of edges with weeigths above t quantile(default 0.5)
-	#    * 'lp_spectral' - euclidean norm of all eigenvalues of laplacian matrices of networks
-	#    * 'lp_egvectors' - euclidean norm of first eigenvector of laplacian matrices of networks
-	#    * 'induced2norm' - induced two norm of adjacency matrices
+
+	clusters = adata.uns[net_type].keys()
+	networks = [adata.uns[net_type][key] for key in clusters]
 
 	nc = len(networks)
 	dist = pd.DataFrame(0, index=range(0, nc), columns=range(0, nc), dtype=np.float64)
+	#dist = pd.DataFrame(0, index=clusters, columns=clusters, dtype=np.float64)
 
 	for i in range(0, nc):
 		for j in range(i, nc):
 
-			m1, m2 = copy.copy(networks[i]), copy.copy(networks[j])
+			m1, m2 = cp.copy(networks[i]), cp.copy(networks[j])
 			w1, w2 = equal_dimentions([m1, m2])
 
 			if dis_type == 'euclidean':
@@ -137,6 +138,58 @@ def network_distance(networks, resc=True,dis_type='euclidean'):
 	if resc:
 		dist = rescale(dist)
 
-	dist = sk.DistanceMatrix(dist.values)
-	
-	return dist
+	dist = sk.DistanceMatrix(dist.values).to_data_frame()
+	dist.columns,dist.index = clusters,clusters
+
+	if copy:
+		return dist
+	else:
+		adata.uns["network_distances"] = dist
+		print('--> Updated adata.uns with key ','\'network_distances\'')
+		
+
+def jaccard_index(gset1, gset2):
+    
+    inter = len(list(set(gset1).intersection(gset2)))
+    union = (len(gset1) + len(gset2)) - inter
+    ji = float(inter)/union
+
+    return ji
+
+def network_jaccard(w1,w2,t=0.5):
+    
+    
+    # Description:
+    # First all edges with weigth above t are selected in each network separately. 
+    # Then the jaccard index is computed for that filtered set of edges.
+    # Input:
+    #  - w1 = numpy array, network 1
+    #  - w2 = numpy array, network 2
+    #  - t = minimum threshold value to filter weights in both networks
+    # Returns:
+    #  - jaccard index of edges with weights above t in both networks
+   
+    n1 = np.quantile(w1,t)
+    n2 = np.quantile(w2,t)
+    
+    G1,G2 = nx.from_numpy_matrix(w1,create_using=nx.DiGraph()),nx.from_numpy_matrix(w2,create_using=nx.DiGraph())
+    g1_top = [(u,v) for (u,v,d) in G1.edges(data=True) if d['weight'] >= n1]
+    g2_top = [(u,v) for (u,v,d) in G2.edges(data=True) if d['weight'] >= n2]
+    
+    ji_edges_top = jaccard_index(g1_top,g2_top)
+
+    return ji_edges_top
+
+
+
+
+
+
+
+
+
+
+
+
+
+
