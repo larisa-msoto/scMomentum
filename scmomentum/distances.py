@@ -79,7 +79,7 @@ def expression_distance(adata, clustcol, resc=True, copy=False):
 	# resc - whether to normalize and rescale distances (recommended)
 	# copy - whether a copy of the distance matrix should be returned. By default copy=True and adata.uns['expression_distances'] is updated
 
-	clusters = [c for c in adata.obs.dropna()[clustcol].unique() if c != "nan"]
+	clusters = [c for c in adata.obs.dropna()[clustcol].unique() if c!='nan']
 	centroids = [
 		np.array(
 			np.mean(
@@ -103,6 +103,9 @@ def expression_distance(adata, clustcol, resc=True, copy=False):
 
 	dist = sk.DistanceMatrix(dist.values).to_data_frame()
 	dist.columns,dist.index = clusters,clusters
+
+	sclusters = np.sort(dist.index.to_list())
+	dist = dist.reindex(index=sclusters,columns=sclusters)
 
 	if copy:
 		return dist
@@ -140,6 +143,9 @@ def network_distance(adata,net_type,resc=True,dis_type='euclidean',copy=False):
 
 	dist = sk.DistanceMatrix(dist.values).to_data_frame()
 	dist.columns,dist.index = clusters,clusters
+
+	sclusters = np.sort(dist.index.to_list())
+	dist = dist.reindex(index=sclusters,columns=sclusters)
 
 	if copy:
 		return dist
