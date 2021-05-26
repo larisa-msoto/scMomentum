@@ -63,7 +63,7 @@ def rank_genes(V, X, g, n):
 	return gset
 
 
-def predict_network(adata, cluster, genes, network_size, clustcol,name='',copy=False):
+def predict_network(adata, cluster, genes, network_size, clustcol,name='',layer='spliced',copy=False):
 
 	## INPUT
 
@@ -78,18 +78,21 @@ def predict_network(adata, cluster, genes, network_size, clustcol,name='',copy=F
 	ind = adata.obs[clustcol] == cluster
 	V = pd.DataFrame(adata.layers["velocity"][ind.values, :], columns=adata.var.index)
 	X = pd.DataFrame(
-		adata.layers["spliced"][ind.values, :].todense(), columns=adata.var.index
+		adata.layers[layer][ind.values, :].todense(), columns=adata.var.index
 	)
 
 	# Get  genes
 
 	if isinstance(genes, str):
 		geneset = rank_genes(V, X, genes, network_size)
+		tag = genes + "-" + str(network_size) + name
+
 	else:
 		geneset = [g for g in genes if g in X.columns]
 		genes = "manual"
+		tag = genes + "-" + name
+
 		
-	tag = genes + "-" + str(network_size) + name
 
 	# Infer networks
 
