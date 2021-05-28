@@ -31,7 +31,7 @@ def preprocess(adata, clustcol):
 def rank_genes(V, X, g, n):
 
 	# INPUT
-	# V = velocity matric for the cells in a specific cluster
+	# V = velocity matrix for the cells in a specific cluster
 	# X = expression matrix for the cells in a specific cluster
 	# n = number of genes to choose
 	# g = str ranking method. Options:
@@ -47,18 +47,19 @@ def rank_genes(V, X, g, n):
 	options = ['absvel','topvel','stdvel','stdexp','highexp']
 
 	if g not in options:
-		raise ValueError("Gene mode is not in options. Please indicate a valid gene mode")
+		raise ValueError("Gene mode is not in options. Please indicate a valid gene mode: absvel,topvel,stdvel,stdexp,highexp")
 	
+
 	if g == "absvel":
-		gset = V.dropna().abs().mean(0).sort_values(ascending=False)[0:n].index.tolist()
+		gset = V.dropna().abs().mean(0).dropna().sort_values(ascending=False)[0:n].index.tolist()
 	elif g == "topvel":
-		gset = V.dropna().mean(0).sort_values(ascending=False)[0:n].index.tolist()
+		gset = V.dropna(0).dropna().sort_values(ascending=False)[0:n].index.tolist()
 	elif g == "stdvel":
-		gset = V.dropna().std(0).sort_values(ascending=False).index.tolist()[0:n]
+		gset = V.dropna().std(0).dropna().sort_values(ascending=False).index.tolist()[0:n]
 	elif g == "stdexp":
-		gset = X.dropna().std(0).sort_values(ascending=False).index.tolist()[0:n]
+		gset = X.dropna().std(0).dropna().sort_values(ascending=False).index.tolist()[0:n]
 	elif g == "highexp":
-		gset = X.dropna().mean(0).sort_values(ascending=False).index.tolist()[0:n]
+		gset = X.dropna().mean(0).dropna().sort_values(ascending=False).index.tolist()[0:n]
 
 	return gset
 
@@ -84,26 +85,25 @@ def predict_network(adata, cluster, genes, network_size, clustcol,name='',layer=
 	# Get  genes
 
 	if isinstance(genes, str):
-		geneset = rank_genes(V, X, genes, network_size)
-		tag = genes + "-" + str(network_size) + name
+
+		if (genes!='allvalid'):
+			geneset = rank_genes(V, X, genes, network_size)
+			tag = genes + "-" + str(network_size) + name
+		else:
+			geneset = adata.var['velocity_genes'].index[adata.var['velocity_genes']].sort_values().tolist()
+			tag = genes + "-" + str(network_size) + name
 
 	else:
 		geneset = [g for g in genes if g in X.columns]
 		genes = "manual"
 		tag = genes + "-" + name
 
-		
-
 	# Infer networks
 
 	Xc = X.loc[:, geneset]
 	Xpinv = np.linalg.pinv(Xc)
 	Vc = V.loc[:, geneset]
-	Gf = np.diag(
-		adata.var.fit_gamma.loc[
-			geneset,
-		]
-	)
+	Gf = np.diag(adata.var.fit_gamma.loc[geneset,])
 	W = np.nan_to_num(np.dot(Xpinv, (Vc + np.dot(Xc, Gf))), nan=0)
 	W = pd.DataFrame(np.array(W, dtype=np.float64), index=geneset, columns=geneset)
 
